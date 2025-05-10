@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AutoArsPoetica", "AutoArsPoetica", "{7A8B20BA-56DE-4EB2-8B64-D8D38125E11F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoArsPoetica", "AutoArsPoetica\AutoArsPoetica\AutoArsPoetica.csproj", "{805D0815-FDA0-4AF7-8606-D3A206A1BA5D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoArsPoetica.Client", "AutoArsPoetica\AutoArsPoetica.Client\AutoArsPoetica.Client.csproj", "{6D6D8A7F-A235-4F09-8D70-E94E718678D4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{805D0815-FDA0-4AF7-8606-D3A206A1BA5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{805D0815-FDA0-4AF7-8606-D3A206A1BA5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{805D0815-FDA0-4AF7-8606-D3A206A1BA5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{805D0815-FDA0-4AF7-8606-D3A206A1BA5D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D6D8A7F-A235-4F09-8D70-E94E718678D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D6D8A7F-A235-4F09-8D70-E94E718678D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D6D8A7F-A235-4F09-8D70-E94E718678D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D6D8A7F-A235-4F09-8D70-E94E718678D4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{805D0815-FDA0-4AF7-8606-D3A206A1BA5D} = {7A8B20BA-56DE-4EB2-8B64-D8D38125E11F}
+		{6D6D8A7F-A235-4F09-8D70-E94E718678D4} = {7A8B20BA-56DE-4EB2-8B64-D8D38125E11F}
+	EndGlobalSection
+EndGlobal

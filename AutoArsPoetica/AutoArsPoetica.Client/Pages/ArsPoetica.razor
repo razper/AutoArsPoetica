@@ -1,0 +1,146 @@
+﻿@page "/"
+@inject IArsPoeticaService ArsPoeticaService
+@implements IDisposable
+<PageTitle>Auto Ars Poetica</PageTitle>
+
+<div class="page-container">
+    <div class="poem-text">@DisplayedPoem</div>
+
+    <div class="button-container">
+        <MudButton @ref="button" Color="Color.Surface" Variant="Variant.Filled" OnClick="GeneratePoem"
+            Disabled="@IsGenerating">
+            @(IsGenerating ? "Writing..." : "Write")
+        </MudButton>
+    </div>
+</div>
+
+<style>
+    .page-container {
+        min-height: 100vh;
+        padding: 2rem;
+        background-color: rgb(235, 235, 235);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .page-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image:
+            radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            repeating-linear-gradient(0deg,
+                rgba(255, 255, 255, 0.05) 0px,
+                rgba(255, 255, 255, 0.05) 1px,
+                transparent 1px,
+                transparent 2px),
+            repeating-linear-gradient(90deg,
+                rgba(255, 255, 255, 0.05) 0px,
+                rgba(255, 255, 255, 0.05) 1px,
+                transparent 1px,
+                transparent 2px);
+        background-size: 100% 100%, 20px 20px, 20px 20px;
+        opacity: 0.5;
+        pointer-events: none;
+        mix-blend-mode: overlay;
+    }
+
+    .page-container::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.003' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        opacity: 0.15;
+        pointer-events: none;
+        mix-blend-mode: multiply;
+    }
+
+    .poem-text {
+        color: #2c1810;
+        line-height: 1.6;
+        letter-spacing: 0.5px;
+        position: relative;
+        z-index: 1;
+        font-family: 'Courier New', monospace;
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+        white-space: pre-wrap;
+        min-height: 400px;
+        width: 80%;
+        max-width: 800px;
+        text-align: left;
+        border-left: 2px solid #2c1810;
+        padding-left: 1rem;
+    }
+
+    .button-container {
+        position: relative;
+        z-index: 1;
+        margin-top: 2rem;
+    }
+</style>
+
+@code {
+    private MudButton button;
+    private string FullPoem = "";
+    private string DisplayedPoem = @"Make love on the net
+When I expose my love, anyone online can see it
+And I can see theirs
+I am no longer ashamed
+I share
+I share all that is mine on the net
+All that is me on the net";
+    private bool IsGenerating = false;
+    private Timer? TypewriterTimer;
+    private int CurrentIndex = 0;
+    private const int TypewriterDelay = 50; // milliseconds between characters
+
+    private async Task GeneratePoem()
+    {
+        if (IsGenerating) return;
+
+        IsGenerating = true;
+        button.Disabled = true;
+
+        // Stop any existing typewriter effect
+        TypewriterTimer?.Dispose();
+
+        // Get new poem
+        FullPoem = await ArsPoeticaService.GeneratePoemAsync();
+        DisplayedPoem = "";
+        CurrentIndex = 0;
+
+        // Start typewriter effect
+        TypewriterTimer = new Timer(UpdateTypewriter, null, 0, TypewriterDelay);
+    }
+
+    private void UpdateTypewriter(object? state)
+    {
+        if (CurrentIndex < FullPoem.Length)
+        {
+            DisplayedPoem += FullPoem[CurrentIndex];
+            CurrentIndex++;
+            StateHasChanged();
+        }
+        else
+        {
+            TypewriterTimer?.Dispose();
+            IsGenerating = false;
+            button.Disabled = false;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        TypewriterTimer?.Dispose();
+    }
+}
