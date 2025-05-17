@@ -3,112 +3,235 @@
 @implements IDisposable
 <PageTitle>Auto Ars Poetica</PageTitle>
 
-<div class="page-container">
-    <div class="poem-text">@DisplayedPoem</div>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;700&display=swap" rel="stylesheet">
 
-    <div class="button-container">
-        <MudButton @ref="button" Color="Color.Surface" Variant="Variant.Filled" OnClick="GeneratePoem"
-            Disabled="@IsGenerating">
-            @(IsGenerating ? "Writing..." : "Write")
-        </MudButton>
+<div class="autopoetica-root">
+    <div class="autopoetica-title">AUTOPOETICA</div>
+    <div class="generate-center">
+        <span class="generate-link" @onclick="@(() => GeneratePoem())">(Generate)</span>
+    </div>
+    <div class="autopoetica-content">
+        <div class="autopoetica-left">
+            <div class="poem-text">@DisplayedPoem</div>
+        </div>
+    </div>
+</div>
+<div class="autopoetica-bottomleft">
+    <div class="autopoetica-bottomleft-row">
+        <div class="autopoetica-section">
+            <div class="autopoetica-section-title">(Environment)</div>
+            <div class="environment-options">
+                <div class="clickable-option" @onclick="@(() => SelectedEnvironment = "Nature")">
+                    Nature
+                </div>
+                <div class="clickable-option" @onclick="@(() => SelectedEnvironment = "Aviation")">
+                    Aviation
+                </div>
+            </div>
+        </div>
+        <div class="autopoetica-section">
+            <div class="autopoetica-section-title">(Variables)</div>
+            <div class="variables-list twocol">
+                @foreach (var variable in EnvironmentVariables)
+                {
+                    <div class="variable-item">@variable</div>
+                }
+            </div>
+        </div>
     </div>
 </div>
 
 <style>
-    .page-container {
+    body,
+    .autopoetica-root,
+    .autopoetica-content,
+    .autopoetica-left,
+    .autopoetica-section,
+    .autopoetica-section-title,
+    .variable-item,
+    .generate-link,
+    .environment-options,
+    .clickable-option,
+    .variables-list {
+        font-family: 'Lato', sans-serif;
+    }
+
+    body,
+    .autopoetica-root {
+        background: #111;
         min-height: 100vh;
-        padding: 2rem;
-        background-color: rgb(235, 235, 235);
+        margin: 0;
+        padding: 0;
+        color: #fff;
+        font-size: 16pt;
+    }
+
+    .autopoetica-title {
+        text-align: center;
+        font-size: 30pt;
+        font-weight: bold;
+        letter-spacing: 2px;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        color: #fff;
+        font-family: 'Figtree', sans-serif;
+    }
+
+    .autopoetica-content {
+        display: flex;
+        flex-direction: row;
+        height: 70vh;
+        width: 100vw;
+        justify-content: flex-start;
+        align-items: flex-start;
         position: relative;
+    }
+
+    .autopoetica-left {
         display: flex;
         flex-direction: column;
-        align-items: center;
-    }
-
-    .page-container::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-image:
-            radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-            repeating-linear-gradient(0deg,
-                rgba(255, 255, 255, 0.05) 0px,
-                rgba(255, 255, 255, 0.05) 1px,
-                transparent 1px,
-                transparent 2px),
-            repeating-linear-gradient(90deg,
-                rgba(255, 255, 255, 0.05) 0px,
-                rgba(255, 255, 255, 0.05) 1px,
-                transparent 1px,
-                transparent 2px);
-        background-size: 100% 100%, 20px 20px, 20px 20px;
-        opacity: 0.5;
-        pointer-events: none;
-        mix-blend-mode: overlay;
-    }
-
-    .page-container::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.003' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-        opacity: 0.15;
-        pointer-events: none;
-        mix-blend-mode: multiply;
+        justify-content: center;
+        align-items: flex-start;
+        width: 60vw;
+        padding: 2rem 2vw 2rem 4vw;
+        z-index: 1;
     }
 
     .poem-text {
-        color: #2c1810;
+        color: #fff;
+        font-size: 16pt;
         line-height: 1.6;
-        letter-spacing: 0.5px;
-        position: relative;
-        z-index: 1;
-        font-family: 'Courier New', monospace;
-        font-size: 1.5rem;
-        margin-bottom: 2rem;
         white-space: pre-wrap;
-        min-height: 400px;
-        width: 80%;
-        max-width: 800px;
         text-align: left;
-        border-left: 2px solid #2c1810;
-        padding-left: 1rem;
+        min-height: 400px;
+        max-width: 700px;
+        margin-bottom: 2rem;
     }
 
     .button-container {
-        position: relative;
-        z-index: 1;
-        margin-top: 2rem;
+        margin-top: 1rem;
+    }
+
+    .autopoetica-envvars {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        margin-left: 3vw;
+        min-width: 340px;
+        max-width: 540px;
+    }
+
+    .autopoetica-section {
+        margin-bottom: 1rem;
+        min-width: 180px;
+        text-align: left;
+    }
+
+    .autopoetica-section-title {
+        font-size: 16pt;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #ccc;
+        text-align: left;
+    }
+
+    .environment-options {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .clickable-option {
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        font-size: 16pt;
+    }
+
+    .variables-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .variables-list.twocol {
+        display: grid;
+        grid-template-columns: repeat(2, 180px);
+        gap: 0.05rem 2.5rem;
+        min-width: 380px;
+    }
+
+    .variable-item {
+        padding: 0.15rem 0;
+        font-family: 'Lato', sans-serif;
+        font-size: 16pt;
+        color: #fff;
+        line-height: 1.5;
+        text-align: left;
+    }
+
+    .generate-link {
+        color: #fff;
+        font-size: 16pt;
+        cursor: pointer;
+        font-weight: 400;
+        transition: color 0.2s;
+        user-select: none;
+    }
+
+    .generate-center {
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .autopoetica-bottomleft {
+        position: fixed;
+        left: 2vw;
+        bottom: 2vw;
+        z-index: 2;
+        background: transparent;
+        min-width: 540px;
+        min-height: 170px;
+        display: flex;
+        align-items: flex-end;
+    }
+    .autopoetica-bottomleft-row {
+        display: flex;
+        flex-direction: row;
+        gap: 4vw;
+        align-items: flex-start;
+        margin-left: 0;
+        margin-bottom: 0;
+        width: 100%;
     }
 </style>
 
 @code {
-    private MudButton button;
     private string FullPoem = "";
-    private string DisplayedPoem = @"Make love on the net
-When I expose my love, anyone online can see it
-And I can see theirs
-I am no longer ashamed
-I share
-I share all that is mine on the net
-All that is me on the net";
+    private string DisplayedPoem = "";
     private bool IsGenerating = false;
     private Timer? TypewriterTimer;
     private int CurrentIndex = 0;
     private const int TypewriterDelay = 50; // milliseconds between characters
+    private string SelectedEnvironment = "Nature";
+    private List<string> EnvironmentVariables => SelectedEnvironment switch
+    {
+        "Nature" => new List<string> { "Cloudiness", "Temperature", "Humidity", "WindSpeed", "Precipitation Type", "UVIndex",
+"Visibility", "Pressure" },
+        "Aviation" => new List<string> { "Aircrafts", "Average Speed", "Landings", "Takeoffs", "Aircraft Type", "Flight Duration", "Time Of Day", "Direction" },
+        _ => new List<string>()
+    };
 
     private async Task GeneratePoem()
     {
         if (IsGenerating) return;
 
         IsGenerating = true;
-        button.Disabled = true;
 
         // Stop any existing typewriter effect
         TypewriterTimer?.Dispose();
@@ -134,7 +257,6 @@ All that is me on the net";
         {
             TypewriterTimer?.Dispose();
             IsGenerating = false;
-            button.Disabled = false;
             StateHasChanged();
         }
     }

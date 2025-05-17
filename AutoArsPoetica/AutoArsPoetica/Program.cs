@@ -1,9 +1,13 @@
 using AutoArsPoetica.Components;
+using AutoArsPoetica.Services;
 using MudBlazor.Services;
 using OpenAI;
 using OpenAI.Chat;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add HttpClient
+builder.Services.AddHttpClient();
 
 // Add OpenAI configuration
 builder.Services.AddSingleton(sp =>
@@ -16,6 +20,10 @@ builder.Services.AddSingleton(sp =>
 // Add MudBlazor services
 builder.Services.AddMudServices();
 builder.Services.AddScoped<IArsPoeticaService, ArsPoeticaServiceBackEnd>();
+
+// Add Flight and Weather services
+builder.Services.AddScoped<IFlightService, FlightService>();
+builder.Services.AddScoped<IWeatherService, WeatherService>();
 
 // Add services to the container.
 
