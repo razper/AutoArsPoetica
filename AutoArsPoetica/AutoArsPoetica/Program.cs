@@ -21,8 +21,7 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddMudServices();
 builder.Services.AddScoped<IArsPoeticaService, ArsPoeticaServiceBackEnd>();
 
-// Add Flight and Weather services
-builder.Services.AddScoped<IFlightService, FlightService>();
+// Add Weather services
 builder.Services.AddScoped<IWeatherService, WeatherService>();
 
 // Add services to the container.

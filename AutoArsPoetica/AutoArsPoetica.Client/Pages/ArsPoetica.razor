@@ -4,7 +4,7 @@
 <PageTitle>AutoPoetica</PageTitle>
 
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@200..900&display=swap" rel="stylesheet">
 
 <div class="autopoetica-root">
     <div class="autopoetica-title">AUTOPOETICA</div>
@@ -22,10 +22,10 @@
         <div class="autopoetica-section">
             <div class="autopoetica-section-title">(Environment)</div>
             <div class="environment-options">
-                <div class="clickable-option" @onclick="@(() => SelectedEnvironment = "Nature")">
-                    Nature
+                <div class="clickable-option @(SelectedEnvironment == "Atmosphere" ? "selected" : "")" @onclick="@(() => SelectedEnvironment = "Atmosphere")">
+                    Atmosphere
                 </div>
-                <div class="clickable-option" @onclick="@(() => SelectedEnvironment = "Aviation")">
+                <div class="clickable-option @(SelectedEnvironment == "Aviation" ? "selected" : "")" @onclick="@(() => SelectedEnvironment = "Aviation")">
                     Aviation
                 </div>
             </div>
@@ -54,7 +54,7 @@
     .environment-options,
     .clickable-option,
     .variables-list {
-        font-family: 'Lato', sans-serif;
+        font-family: 'Figtree', sans-serif;
     }
 
     body,
@@ -64,12 +64,12 @@
         margin: 0;
         padding: 0;
         color: #fff;
-        font-size: 16pt;
+        font-size: 13pt;
     }
 
     .autopoetica-title {
         text-align: center;
-        font-size: 30pt;
+        font-size: 24pt;
         font-weight: bold;
         letter-spacing: 2px;
         margin-top: 2rem;
@@ -100,13 +100,14 @@
 
     .poem-text {
         color: #fff;
-        font-size: 16pt;
-        line-height: 1.6;
+        font-size: 13pt;
+        line-height: 1.3;
         white-space: pre-wrap;
         text-align: left;
         min-height: 400px;
         max-width: 700px;
         margin-bottom: 2rem;
+        font-family: 'Source Code Pro', sans-serif;
     }
 
     .button-container {
@@ -129,7 +130,7 @@
     }
 
     .autopoetica-section-title {
-        font-size: 16pt;
+        font-size: 13pt;
         font-weight: 600;
         margin-bottom: 0.5rem;
         color: #ccc;
@@ -139,7 +140,7 @@
     .environment-options {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.2rem;
     }
 
     .clickable-option {
@@ -147,7 +148,11 @@
         cursor: pointer;
         border-radius: 4px;
         transition: all 0.2s ease;
-        font-size: 16pt;
+        font-size: 13pt;
+    }
+
+    .clickable-option.selected {
+        font-weight: bold;
     }
 
     .variables-list {
@@ -165,16 +170,16 @@
 
     .variable-item {
         padding: 0.15rem 0;
-        font-family: 'Lato', sans-serif;
-        font-size: 16pt;
+        font-family: 'Figtree', sans-serif;
+        font-size: 13pt;
         color: #fff;
-        line-height: 1.5;
+        line-height: 1.3;
         text-align: left;
     }
 
     .generate-link {
         color: #fff;
-        font-size: 16pt;
+        font-size: 13pt;
         cursor: pointer;
         font-weight: 400;
         transition: color 0.2s;
@@ -218,10 +223,10 @@
     private Timer? TypewriterTimer;
     private int CurrentIndex = 0;
     private const int TypewriterDelay = 50; // milliseconds between characters
-    private string SelectedEnvironment = "Nature";
+    private string SelectedEnvironment = "Atmosphere";
     private List<string> EnvironmentVariables => SelectedEnvironment switch
     {
-        "Nature" => new List<string> { "Cloudiness", "Temperature", "Humidity", "WindSpeed", "Precipitation Type", "UVIndex",
+        "Atmosphere" => new List<string> { "Cloudiness", "Temperature", "Humidity", "WindSpeed", "Precipitation Type", "UVIndex",
 "Visibility", "Pressure" },
         "Aviation" => new List<string> { "Aircrafts", "Average Speed", "Landings", "Takeoffs", "Aircraft Type", "Flight Duration", "Time Of Day", "Direction" },
         _ => new List<string>()

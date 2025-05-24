@@ -12,6 +12,7 @@ internal class ArsPoeticaServiceBackEnd : IArsPoeticaService
         _chatClient = chatClient;
         _weatherService = weatherService;
     }
+
     public async Task<string> GeneratePoemAsync()
     {
         try
@@ -19,7 +20,7 @@ internal class ArsPoeticaServiceBackEnd : IArsPoeticaService
             var haifaWeather = await _weatherService.GetWeatherDataAsync();
             var prompt = WeatherPoemPromptGenerator.GeneratePrompt(haifaWeather);
 
-            ClientResult<ChatCompletion> poem = await _chatClient.CompleteChatAsync(prompt);
+            var poem = await _chatClient.CompleteChatAsync(prompt);
             return poem.Value.Content.First().Text;
         }
         catch (Exception ex)
