@@ -23,6 +23,7 @@ builder.Services.AddScoped<IArsPoeticaService, ArsPoeticaServiceBackEnd>();
 
 // Add Weather services
 builder.Services.AddScoped<IWeatherService, WeatherService>();
+builder.Services.AddScoped<ICryptoService, CryptoService>();
 
 // Add services to the container.
 
@@ -50,12 +51,25 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(typeof(AutoArsPoetica.Client._Imports).Assembly);
 
 // Add minimal API endpoint for poem generation
-app.MapGet("/api/poem/generate", async (IArsPoeticaService arsPoeticaService) =>
+app.MapGet("/api/weather/generate", async (IArsPoeticaService arsPoeticaService) =>
 {
     try
     {
-        var poem = await arsPoeticaService.GeneratePoemAsync();
+        var poem = await arsPoeticaService.GenerateWeatherPoemAsync();
 
+        return Results.Ok(poem);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message);
+    }
+});
+
+app.MapGet("/api/crypto/generate", async (IArsPoeticaService arsPoeticaService) =>
+{
+    try
+    {
+        var poem = await arsPoeticaService.GenerateCryptoPoemAsync();
         return Results.Ok(poem);
     }
     catch (Exception ex)

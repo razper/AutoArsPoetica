@@ -9,9 +9,15 @@ public class ArsPoeticaService : IArsPoeticaService
     {
         _httpClient = httpClient;
     }
-    public async Task<string> GeneratePoemAsync()
+    public async Task<string> GenerateWeatherPoemAsync()
     {
-        var response = await _httpClient.GetFromJsonAsync<string>("/api/poem/generate");
+        var response = await _httpClient.GetFromJsonAsync<string>("/api/weather/generate");
+        return response;
+    }
+
+    public async Task<string> GenerateCryptoPoemAsync()
+    {
+        var response = await _httpClient.GetFromJsonAsync<string>("/api/crypto/generate");
         return response;
     }
 }

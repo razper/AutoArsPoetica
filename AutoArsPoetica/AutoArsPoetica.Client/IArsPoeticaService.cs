@@ -1,4 +1,5 @@
 public interface IArsPoeticaService
 {
-    Task<string> GeneratePoemAsync();
+    Task<string> GenerateWeatherPoemAsync();
+    Task<string> GenerateCryptoPoemAsync();
 }

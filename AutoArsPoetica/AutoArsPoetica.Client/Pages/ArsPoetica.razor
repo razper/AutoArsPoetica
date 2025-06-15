@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/v1"
 @inject IArsPoeticaService ArsPoeticaService
 @implements IDisposable
 <PageTitle>AutoPoetica</PageTitle>
@@ -242,7 +242,7 @@
         TypewriterTimer?.Dispose();
 
         // Get new poem
-        FullPoem = await ArsPoeticaService.GeneratePoemAsync();
+        FullPoem = await ArsPoeticaService.GenerateWeatherPoemAsync();
         DisplayedPoem = "";
         CurrentIndex = 0;
 
