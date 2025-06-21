@@ -5,103 +5,124 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&display=swap" rel="stylesheet">
 
-<div class="scroll-reveal-root">
-    <div class="fixed-content" style="color:@TextColor; opacity:@(1 - SlideProgress * 2);">
-        <h1 class="title">AUTOPOETICA</h1>
-        <div class="poem-block">
-            <div class="poem-text">//Index: Systems Kind Of Silence</div>
-            <div class="poem-text" style="margin-top:2rem;">
-                Const Index = [<br />
-                &nbsp;&nbsp;"Atmosphere(Sky, Breath, Silence)",<br />
-                &nbsp;&nbsp;"Aviation(Path, Signal, Wait)",<br />
-                &nbsp;&nbsp;"Cryptography(Noise, Number, Faith)"<br />
-                ];
-            </div>
-        </div>
-    </div>
-    <div class="black-overlay" style="height:@OverlayHeight;"></div>
-    <div class="final-screen" style="transform: translateY(@FinalScreenTranslateY); opacity:@SlideProgress;">
-        <div class="final-title">AUTOPOETICA</div>
-        <div class="final-center">
-            <div class="final-poem-box">
-                @((MarkupString)DisplayedPoem.Replace("\n", "<br />"))
-            </div>
-        </div>
-        <div class="final-menu">
-            <div style="cursor:pointer;" @onclick="GeneratePoem">Generate</div>
-            <div style="margin-top:2rem; cursor:pointer;" @onclick="EnableDarkMode">Dark Mode &lt;/&gt;</div>
-            <div style="margin-top:2rem;">About</div>
-        </div>
-    </div>
-    @if (IsDarkMode)
+<div class="page-container">
+    @if (!isStarted)
     {
-        <div class="darkmode-overlay">
-            <div class="darkmode-title">AUTOPOETICA</div>
-            <div class="darkmode-center">
-                <div class="darkmode-content">
-                    //Metadata<br />
-                    @CurrentDay<br />
-                    @CurrentTime<br /><br />
-                    //Environment<br />
-                    <div class="env-buttons">
-                        <span @onclick="() => SelectEnv(EnvType.Atmosphere)"
-                            style="cursor:pointer; font-weight:@(SelectedEnv == EnvType.Atmosphere ? "bold" : "normal"); display:block; margin-bottom:0.5rem;">Atmosphere</span>
-                        <span @onclick="() => SelectEnv(EnvType.Aviation)"
-                            style="cursor:pointer; font-weight:@(SelectedEnv == EnvType.Aviation ? "bold" : "normal"); display:block; margin-bottom:0.5rem;">Aviation</span>
-                        <span @onclick="() => SelectEnv(EnvType.Cryptography)"
-                            style="cursor:pointer; font-weight:@(SelectedEnv == EnvType.Cryptography ? "bold" : "normal"); display:block; margin-bottom:1rem;">Cryptography</span>
-                    </div>
-                    //Variables<br />
-                    @foreach (var value in GetSelectedEnvList())
-                    {
-                        <div>@value</div>
-                    }
-                </div>
+        <div class="start-screen">
+            <h1 class="start-title">AUTOPOETICA</h1>
+            <div class="poem-block">
+                <div class="poem-text">// Poetic Engine Initialization</div>
+                <br />
+                <div class="poem-text">Initialize(Atmosphere);</div>
+                <div class="poem-text">Initialize(Aviation);</div>
+                <div class="poem-text">Initialize(Crypto);</div>
+                <br />
+                <div class="poem-text">While (World.Changes()) {</div>
+                <div class="poem-text">&nbsp;&nbsp;Poem = Generate();</div>
+                <div class="poem-text">&nbsp;&nbsp;Render(Poem);</div>
+                <div class="poem-text">}</div>
             </div>
-            <div class="darkmode-menu">
-                <div style="opacity:0;">Generate</div>
-                <div style="margin-top:2rem; cursor:pointer;" @onclick="DisableDarkMode">Bright Mode &lt;/&gt;</div>
-                <div style="opacity:0; margin-top:2rem;">About</div>
+            <div class="start-button" @onclick="() => isStarted = true">Start</div>
+        </div>
+    }
+    else if (!languageSelected)
+    {
+        <div class="language-screen">
+            <div class="language-question">Which Language Do You Dream In?</div>
+            <div class="language-options">
+                <div class="language-option" @onclick="() => SelectLanguage(EnvType.Aviation)">Signal Echo</div>
+                <div class="language-option" @onclick="() => SelectLanguage(EnvType.Cryptography)">Encrypted Silence</div>
+                <div class="language-option" @onclick="() => SelectLanguage(EnvType.Atmosphere)">Mistic Pressure</div>
             </div>
         </div>
     }
-    <div style="height: 250vh;"></div> <!-- Spacer to enable scrolling -->
+    else
+    {
+        <div class="final-screen" style="opacity:1;">
+            <div class="final-title">AUTOPOETICA</div>
+            <div class="final-center">
+                <div class="final-poem-box">
+                    @((MarkupString)DisplayedPoem.Replace("\n", "<br />"))
+                </div>
+            </div>
+            <div class="final-menu">
+                <div style="cursor:pointer;" @onclick="ReturnToStart">About</div>
+                <div style="cursor:pointer;" @onclick="GeneratePoem">Generate</div>
+                <div style="cursor:pointer;" @onclick="EnableDarkMode">Dark Mode &lt;/&gt;</div>
+            </div>
+        </div>
+        @if (IsDarkMode)
+        {
+            <div class="darkmode-overlay">
+                <div class="darkmode-title">AUTOPOETICA</div>
+                <div class="darkmode-center">
+                    <div class="darkmode-content">
+                        //Metadata<br />
+                        @CurrentDay<br />
+                        @CurrentTime<br /><br />
+                        //Environment<br />
+                        <div class="env-buttons">
+                            <span @onclick="() => SelectEnv(EnvType.Atmosphere)"
+                                style="cursor:pointer; font-weight:@(SelectedEnv == EnvType.Atmosphere ? "bold" : "normal"); display:block; margin-bottom:0.5rem;">Atmosphere</span>
+                            <span @onclick="() => SelectEnv(EnvType.Aviation)"
+                                style="cursor:pointer; font-weight:@(SelectedEnv == EnvType.Aviation ? "bold" : "normal"); display:block; margin-bottom:0.5rem;">Aviation</span>
+                            <span @onclick="() => SelectEnv(EnvType.Cryptography)"
+                                style="cursor:pointer; font-weight:@(SelectedEnv == EnvType.Cryptography ? "bold" : "normal"); display:block; margin-bottom:1rem;">Cryptography</span>
+                        </div>
+                        //Variables<br />
+                        @foreach (var value in GetSelectedEnvList())
+                        {
+                            <div>@value</div>
+                        }
+                    </div>
+                </div>
+                <div class="darkmode-menu">
+                    <div style="opacity:0;">Generate</div>
+                    <div style="margin-top:2rem; cursor:pointer;" @onclick="DisableDarkMode">Bright Mode &lt;/&gt;</div>
+                    <div style="opacity:0; margin-top:2rem;">About</div>
+                </div>
+            </div>
+        }
+    }
 </div>
 
 <style>
-    .scroll-reveal-root {
+    .page-container {
         min-height: 100vh;
         width: 100vw;
         background: #f5ebdd;
         font-family: 'Inconsolata', monospace;
         position: relative;
         overflow-x: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    .fixed-content {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+    .start-screen {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        pointer-events: none;
-        z-index: 2;
-        transition: color 0.3s linear, opacity 0.3s linear;
+        text-align: center;
+        height: 100vh;
+        width: 100%;
+        color: #222;
     }
 
-    .title {
+    .start-title {
         font-size: 2rem;
         font-weight: 400;
         letter-spacing: 0.05em;
-        margin-bottom: 8rem;
-        background: transparent;
-        padding: 0;
-        border: none;
-        outline: none;
+        position: absolute;
+        top: 2rem;
+    }
+
+    .start-button {
+        position: absolute;
+        bottom: 5rem;
+        cursor: pointer;
+        font-size: 1rem;
     }
 
     .poem-block {
@@ -112,17 +133,6 @@
         font-size: 1rem;
         margin-bottom: 0.5rem;
         font-family: 'Inconsolata', monospace;
-    }
-
-    .black-overlay {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: #111;
-        z-index: 1;
-        transition: height 0.3s linear;
-        pointer-events: none;
     }
 
     .final-screen {
@@ -137,7 +147,7 @@
         flex-direction: column;
         height: 100vh;
         width: 100vw;
-        transition: transform 0.5s cubic-bezier(.4, 0, .2, 1), opacity 0.5s cubic-bezier(.4, 0, .2, 1);
+        transition: opacity 0.5s cubic-bezier(.4, 0, .2, 1);
     }
 
     .final-title {
@@ -158,14 +168,12 @@
     .final-center {
         flex: 1;
         display: flex;
-        align-items: flex-start;
-        justify-content: flex-start;
-        padding-left: 12rem;
-        padding-top: 6rem;
+        align-items: center;
+        justify-content: center;
     }
 
     .final-poem-box {
-        padding: 1.5rem 1.5rem 6rem 1.5rem;
+        padding: 1.5rem;
         font-size: 1rem;
         font-family: 'Inconsolata', monospace;
         min-width: 400px;
@@ -178,14 +186,14 @@
     .final-menu {
         position: absolute;
         left: 5rem;
+        right: 5rem;
         bottom: 2rem;
         font-size: 1rem;
         color: #222;
         font-family: 'Inconsolata', monospace;
         display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        padding-bottom: 3rem;
+        justify-content: space-between;
+        align-items: center;
     }
 
     .darkmode-overlay {
@@ -253,17 +261,45 @@
         align-items: flex-start;
         margin-bottom: 1rem;
     }
+
+    .language-screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        height: 100vh;
+        width: 100%;
+        color: #222;
+        position: relative;
+    }
+
+    .language-question {
+        position: absolute;
+        top: 30%;
+        font-size: 1rem;
+    }
+
+    .language-options {
+        display: flex;
+        width: 60%;
+        justify-content: space-between;
+        align-items: center;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .language-option {
+        cursor: pointer;
+        font-size: 1rem;
+    }
 </style>
 
 @code {
-    private double ScrollProgress = 0;
-    // 0-0.5: transition, 0.5-1: slide up
-    private double SlideProgress => Math.Clamp((ScrollProgress - 0.5) * 2, 0, 1);
-    private string TextColor => InterpolateColor((34, 34, 34), (245, 235, 221), Math.Min(ScrollProgress * 2, 1));
-    private string OverlayHeight => ScrollProgress < 0.5 ? $"{(int)(ScrollProgress * 200)}vh" : "100vh";
-    private string FinalScreenTranslateY => SlideProgress < 1 ? $"{(1 - SlideProgress) * 100}vh" : "0vh";
-    private DotNetObjectReference<ArsPoeticaV2>? _dotNetRef;
-    private IJSObjectReference? _jsModule;
+    private bool isStarted = false;
+    private bool languageSelected = false;
     private bool IsDarkMode = false;
     private string CurrentDay = "";
     private string CurrentTime = "";
@@ -343,57 +379,14 @@
         StateHasChanged();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private void SelectLanguage(EnvType env)
     {
-        if (firstRender)
-        {
-            _dotNetRef = DotNetObjectReference.Create(this);
-            _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "/scrollTransition.js");
-            await _jsModule.InvokeVoidAsync("registerScrollHandler", _dotNetRef);
-        }
+        SelectedEnv = env;
+        languageSelected = true;
     }
 
-    [JSInvokable]
-    public void OnScrollChanged(double scrollY)
+    public void Dispose()
     {
-        double docHeight = DocumentHeight;
-        double winHeight = WindowHeight;
-        double maxScroll = docHeight - winHeight;
-        double progress = maxScroll > 0 ? Math.Clamp(scrollY / maxScroll, 0, 1) : 0;
-        if (Math.Abs(progress - ScrollProgress) > 0.001)
-        {
-            ScrollProgress = progress;
-            StateHasChanged();
-        }
-    }
-
-    // These will be set by JS interop
-    private double DocumentHeight = 0;
-    private double WindowHeight = 0;
-
-    [JSInvokable]
-    public void OnResize(double docHeight, double winHeight)
-    {
-        DocumentHeight = docHeight;
-        WindowHeight = winHeight;
-    }
-
-    private string InterpolateColor((int r, int g, int b) from, (int r, int g, int b) to, double t)
-    {
-        int r = (int)(from.r + (to.r - from.r) * t);
-        int g = (int)(from.g + (to.g - from.g) * t);
-        int b = (int)(from.b + (to.b - from.b) * t);
-        return $"rgb({r},{g},{b})";
-    }
-
-    public async void Dispose()
-    {
-        if (_jsModule is not null)
-        {
-            await _jsModule.InvokeVoidAsync("unregisterScrollHandler");
-            await _jsModule.DisposeAsync();
-        }
-        _dotNetRef?.Dispose();
         TypewriterTimer?.Dispose();
         _timer?.Dispose();
     }
@@ -422,5 +415,18 @@
         CurrentDay = now.DayOfWeek.ToString();
         CurrentTime = now.ToString("HH:mm");
         StateHasChanged();
+    }
+
+    private void ReturnToStart()
+    {
+        isStarted = false;
+        languageSelected = false;
+        DisplayedPoem = "";
+        FullPoem = "";
+        if (IsGenerating)
+        {
+            TypewriterTimer?.Dispose();
+            IsGenerating = false;
+        }
     }
 }
