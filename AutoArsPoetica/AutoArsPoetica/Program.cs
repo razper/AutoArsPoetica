@@ -1,5 +1,6 @@
 using AutoArsPoetica.Components;
 using AutoArsPoetica.Services;
+using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using OpenAI;
 using OpenAI.Chat;
@@ -17,7 +18,12 @@ builder.Services.AddSingleton(sp =>
     return new ChatClient("gpt-3.5-turbo", apiKey);
 });
 
+// Add mongo db
+builder.Services.AddDbContext<ArsPoeticaDbContext>(options =>
+options.UseMongoDB(builder.Configuration["MongoDB:ConnectionString"], builder.Configuration["MongoDB:DatabaseName"]));
+
 // Add MudBlazor services
+
 builder.Services.AddMudServices();
 builder.Services.AddScoped<IArsPoeticaService, ArsPoeticaServiceBackEnd>();
 
@@ -51,11 +57,16 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(typeof(AutoArsPoetica.Client._Imports).Assembly);
 
 // Add minimal API endpoint for poem generation
-app.MapGet("/api/weather/generate", async (IArsPoeticaService arsPoeticaService) =>
+app.MapGet("/api/weather/generate", async (IArsPoeticaService arsPoeticaService, ArsPoeticaDbContext dbContext) =>
 {
     try
     {
-        var poem = await arsPoeticaService.GenerateWeatherPoemAsync();
+        var createdAt = DateTime.UtcNow;
+        var poemContent = await arsPoeticaService.GenerateWeatherPoemAsync();
+        var poem = new Poem(poemContent, createdAt);
+
+        dbContext.Poems.Add(poem);
+        await dbContext.SaveChangesAsync();
 
         return Results.Ok(poem);
     }
@@ -65,17 +76,28 @@ app.MapGet("/api/weather/generate", async (IArsPoeticaService arsPoeticaService)
     }
 });
 
-app.MapGet("/api/crypto/generate", async (IArsPoeticaService arsPoeticaService) =>
+app.MapGet("/api/crypto/generate", async (IArsPoeticaService arsPoeticaService, ArsPoeticaDbContext dbContext) =>
 {
     try
     {
-        var poem = await arsPoeticaService.GenerateCryptoPoemAsync();
+        var createdAt = DateTime.UtcNow;
+        var poemContent = await arsPoeticaService.GenerateCryptoPoemAsync();
+        var poem = new Poem(poemContent, createdAt);
+
+        dbContext.Poems.Add(poem);
+        await dbContext.SaveChangesAsync();
+
         return Results.Ok(poem);
     }
     catch (Exception ex)
     {
         return Results.Problem(ex.Message);
     }
+});
+
+app.MapGet("/api/poems", async (ArsPoeticaDbContext dbContext) =>
+{
+    return await dbContext.Poems.OrderByDescending(p => p.Epoch).Take(23).ToListAsync();
 });
 
 app.Run();

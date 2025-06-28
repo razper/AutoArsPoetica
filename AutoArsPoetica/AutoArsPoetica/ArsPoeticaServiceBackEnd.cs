@@ -1,5 +1,5 @@
-using System.ClientModel;
 using AutoArsPoetica.Services;
+using Microsoft.EntityFrameworkCore;
 using OpenAI.Chat;
 
 internal class ArsPoeticaServiceBackEnd : IArsPoeticaService
@@ -7,12 +7,14 @@ internal class ArsPoeticaServiceBackEnd : IArsPoeticaService
     private readonly ChatClient _chatClient;
     private readonly IWeatherService _weatherService;
     private readonly ICryptoService _cryptoService;
+    private readonly ArsPoeticaDbContext _dbContext;
 
-    public ArsPoeticaServiceBackEnd(ChatClient chatClient, IWeatherService weatherService, ICryptoService cryptoService)
+    public ArsPoeticaServiceBackEnd(ChatClient chatClient, IWeatherService weatherService, ICryptoService cryptoService, IServiceProvider serviceProvider)
     {
         _chatClient = chatClient;
         _weatherService = weatherService;
         _cryptoService = cryptoService;
+        _dbContext = serviceProvider.CreateScope().ServiceProvider.GetRequiredService<ArsPoeticaDbContext>();
     }
 
     public async Task<string> GenerateWeatherPoemAsync()
@@ -44,5 +46,17 @@ internal class ArsPoeticaServiceBackEnd : IArsPoeticaService
         {
             throw new Exception("Error generating crypto poem", ex);
         }
+    }
+
+    public async Task<List<AutoArsPoetica.Client.Models.Poem>> FetchPoemsAsync()
+    {
+        var poems = await _dbContext.Poems.OrderByDescending(p => p.Epoch).Take(23).ToListAsync();
+        return poems.Select(p => new AutoArsPoetica.Client.Models.Poem
+        {
+            Id = p.Id,
+            Content = p.Content,
+            CreatedAt = p.CreatedAt,
+            Epoch = p.Epoch
+        }).ToList();
     }
 }

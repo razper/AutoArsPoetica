@@ -1,4 +1,5 @@
 @page "/"
+@using AutoArsPoetica.Client.Models
 @inject IJSRuntime JS
 @inject IArsPoeticaService ArsPoeticaService
 @implements IDisposable
@@ -28,7 +29,7 @@
     else if (!languageSelected)
     {
         <div class="language-screen">
-            <div class="language-question">Which Language Do You Dream In?</div>
+            <div class="language-question">Which Language Do You Speak?</div>
             <div class="language-options">
                 <div class="language-option" @onclick="() => SelectLanguage(EnvType.Aviation)">Signal Echo</div>
                 <div class="language-option" @onclick="() => SelectLanguage(EnvType.Cryptography)">Encrypted Silence</div>
@@ -39,13 +40,29 @@
     else
     {
         <div class="final-screen" style="opacity:1;">
-            <div class="final-title">AUTOPOETICA</div>
+            <div class="top-bar">
+                <div class="final-title">AUTOPOETICA</div>
+                <div class="epoch-sidebar">
+                    <div class="epoch-current" @onclick="ToggleEpochList" style="cursor:pointer;">
+                        @CurrentEpoch
+                    </div>
+                    @if (IsEpochListOpen)
+                    {
+                        <div class="epoch-list-unboxed">
+                            @foreach (var poem in Poems)
+                            {
+                                <div class="epoch-list-item" @onclick="() => ShowPoemFromList(poem)">@poem.Epoch</div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
             <div class="final-center">
                 <div class="final-poem-box">
                     @((MarkupString)DisplayedPoem.Replace("\n", "<br />"))
                 </div>
             </div>
-            <div class="final-menu">
+            <div class="final-menu" style="left: 7rem; right: 12rem;">
                 <div style="cursor:pointer;" @onclick="ReturnToStart">About</div>
                 <div style="cursor:pointer;" @onclick="GeneratePoem">Generate</div>
                 <div style="cursor:pointer;" @onclick="EnableDarkMode">Dark Mode &lt;/&gt;</div>
@@ -151,9 +168,7 @@
     }
 
     .final-title {
-        position: absolute;
-        top: 2rem;
-        left: 5rem;
+        position: static;
         font-size: 1.3rem;
         color: #222;
         text-align: left;
@@ -185,8 +200,8 @@
 
     .final-menu {
         position: absolute;
-        left: 5rem;
-        right: 5rem;
+        left: 7rem;
+        right: 12rem;
         bottom: 2rem;
         font-size: 1rem;
         color: #222;
@@ -281,10 +296,12 @@
     }
 
     .language-options {
-        display: flex;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
         width: 60%;
-        justify-content: space-between;
-        align-items: center;
+        gap: 2rem;
+        justify-items: center;
+        align-items: start;
         position: absolute;
         top: 50%;
         left: 50%;
@@ -294,6 +311,73 @@
     .language-option {
         cursor: pointer;
         font-size: 1rem;
+    }
+
+    .epoch-sidebar {
+        position: static;
+        top: unset;
+        width: 100px;
+        background: transparent;
+        z-index: 200;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        font-family: 'Inconsolata', monospace;
+    }
+    .epoch-current {
+        font-size: 0.95rem;
+        font-weight: 400;
+        color: #222;
+        background: #f5ebdd;
+        border-radius: 4px;
+        padding: 0.2rem 0.5rem;
+        margin-bottom: 0.2rem;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        transition: background 0.2s;
+    }
+    .epoch-current:hover {
+        background: #e0d6c7;
+    }
+    .epoch-list-unboxed {
+        position: fixed;
+        top: unset;
+        width: 100px;
+        max-height: 100vh;
+        background: none;
+        border: none;
+        box-shadow: none;
+        padding: 0.2rem 0.5rem;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        z-index: 201;
+        margin-top: 2.2rem;
+    }
+    .epoch-list-item {
+        font-size: 0.95rem;
+        font-weight: 400;
+        color: #888;
+        font-family: 'Inconsolata', monospace;
+        background: none;
+        border-radius: 0;
+        padding: 0.2rem 0.5rem;
+        margin-bottom: 0.2rem;
+        transition: background 0.2s;
+    }
+
+    .top-bar {
+        width: 100vw;
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 2rem 2rem 0 5rem;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
     }
 </style>
 
@@ -389,6 +473,8 @@
     {
         TypewriterTimer?.Dispose();
         _timer?.Dispose();
+        EpochTimer?.Dispose();
+        EpochApiTimer?.Dispose();
     }
 
     private async void EnableDarkMode()
@@ -428,5 +514,51 @@
             TypewriterTimer?.Dispose();
             IsGenerating = false;
         }
+    }
+
+    private long CurrentEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+    private List<Poem> Poems = new();
+    private bool IsEpochListOpen = false;
+    private Timer? EpochTimer;
+    private Timer? EpochApiTimer;
+
+    protected override void OnInitialized()
+    {
+        // Start the epoch update timer (every second)
+        EpochTimer = new Timer(_ =>
+        {
+            CurrentEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            InvokeAsync(StateHasChanged);
+        }, null, 0, 1000);
+
+        // Start the simulated API timer (every 3 seconds)
+        EpochApiTimer = new Timer(async _ =>
+        {
+            Poems = await FetchPoemsAsync();
+            await InvokeAsync(StateHasChanged);
+        }, null, 0, 3000);
+    }
+
+    private void ToggleEpochList()
+    {
+        IsEpochListOpen = !IsEpochListOpen;
+    }
+
+    private async Task<List<Poem>> FetchPoemsAsync()
+    {
+        // Simulate fetching the last 23 epochs (1 per second)
+        return await ArsPoeticaService.FetchPoemsAsync();
+    }
+
+    private void ShowPoemFromList(Poem poem)
+    {
+        // Stop any ongoing typewriter effect
+        TypewriterTimer?.Dispose();
+        IsGenerating = false;
+
+        // Set the displayed poem to the selected one
+        DisplayedPoem = poem.Content; // Adjust property name if needed
+        FullPoem = poem.Content;      // Optional: keep FullPoem in sync
+        StateHasChanged();
     }
 }
