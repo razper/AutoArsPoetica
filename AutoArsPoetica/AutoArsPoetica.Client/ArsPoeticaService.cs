@@ -1,6 +1,7 @@
 using System;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using AutoArsPoetica;
 using AutoArsPoetica.Client.Models;
 
 public class ArsPoeticaService : IArsPoeticaService
@@ -27,4 +28,17 @@ public class ArsPoeticaService : IArsPoeticaService
         var response = await _httpClient.GetFromJsonAsync<List<Poem>>("/api/poems");
         return response;
     }
+
+    public async Task<WeatherDto> FetchWeatherAsync()
+    {
+        var response = await _httpClient.GetFromJsonAsync<WeatherDto>("/api/weather");
+        return response;
+    }
+
+    public async Task<CryptoDto> FetchCryptoAsync()
+    {
+        var response = await _httpClient.GetFromJsonAsync<CryptoDto>("/api/crypto");
+        return response;
+    }
+
 }

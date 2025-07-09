@@ -89,14 +89,14 @@
                         //Variables<br />
                         @foreach (var value in GetSelectedEnvList())
                         {
-                            <div>@value</div>
+                            <div>@value: @GetVariableValue(value)</div>
                         }
                     </div>
                 </div>
                 <div class="darkmode-menu">
-                    <div style="opacity:0;">Generate</div>
-                    <div style="margin-top:2rem; cursor:pointer;" @onclick="DisableDarkMode">Bright Mode &lt;/&gt;</div>
-                    <div style="opacity:0; margin-top:2rem;">About</div>
+                    <div style="opacity:0;" @onclick="ReturnToStart">About</div>
+                    <div style="opacity:0;" @onclick="GeneratePoem">Generate</div>
+                    <div style="cursor:pointer;" @onclick="DisableDarkMode">Bright Mode &lt;/&gt;</div>
                 </div>
             </div>
         }
@@ -196,6 +196,7 @@
         color: #222;
         background: transparent;
         text-align: left;
+        margin-top: -2rem; /* Adjust this value as needed */
     }
 
     .final-menu {
@@ -259,15 +260,15 @@
 
     .darkmode-menu {
         position: absolute;
-        left: 5rem;
+        left: 7rem;
+        right: 12rem;
         bottom: 2rem;
         font-size: 1rem;
         color: #f5ebdd;
         font-family: 'Inconsolata', monospace;
         display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        padding-bottom: 3rem;
+        justify-content: space-between;
+        align-items: center;
     }
 
     .env-buttons {
@@ -457,9 +458,83 @@
         }
     }
 
+    private WeatherDto? CurrentWeather;
+    private CryptoDto? CurrentCrypto;
+    private System.Threading.Timer? _envTimer;
+
+    private async void StartEnvTimer()
+    {
+        _envTimer?.Dispose();
+        _envTimer = new System.Threading.Timer(async _ =>
+        {
+            await FetchEnvData();
+            await InvokeAsync(StateHasChanged);
+        }, null, 0, 1000);
+    }
+
+    private void StopEnvTimer()
+    {
+        _envTimer?.Dispose();
+        _envTimer = null;
+    }
+
+    private async Task FetchEnvData()
+    {
+        try
+        {
+            if (SelectedEnv == EnvType.Atmosphere || SelectedEnv == EnvType.Aviation)
+            {
+                CurrentWeather = await ArsPoeticaService.FetchWeatherAsync();
+            }
+            else if (SelectedEnv == EnvType.Cryptography)
+            {
+                CurrentCrypto = await ArsPoeticaService.FetchCryptoAsync();
+            }
+        }
+        catch { /* Optionally handle errors */ }
+    }
+
+    private string GetVariableValue(string variable)
+    {
+        if (SelectedEnv == EnvType.Atmosphere || SelectedEnv == EnvType.Aviation)
+        {
+            if (CurrentWeather == null) return "...";
+            return variable switch
+            {
+                "Cloudiness" => $"{CurrentWeather.Cloudiness}%",
+                "Temperature" => $"{CurrentWeather.Temperature}°C",
+                "Humidity" => $"{CurrentWeather.Humidity}%",
+                "WindSpeed" => $"{CurrentWeather.WindSpeed} km/h",
+                "Precipitation Type" => CurrentWeather.PrecipitationType,
+                "UVIndex" => CurrentWeather.UVIndex,
+                "Visibility" => $"{CurrentWeather.Visibility} m",
+                "Pressure" => $"{CurrentWeather.Pressure} hPa",
+                _ => "-"
+            };
+        }
+        else if (SelectedEnv == EnvType.Cryptography)
+        {
+            if (CurrentCrypto == null) return "...";
+            return variable switch
+            {
+                "Price" => CurrentCrypto.Price,
+                "Price Change 24h" => CurrentCrypto.PriceChange24h,
+                "Volume" => CurrentCrypto.Volume24h,
+                "Ask" => CurrentCrypto.Ask.ToString(),
+                "Bid" => CurrentCrypto.Bid.ToString(),
+                "Trading" => CurrentCrypto.Trading.ToString(),
+                "Status" => CurrentCrypto.Status,
+                "Product ID" => CurrentCrypto.ProductId,
+                _ => "-"
+            };
+        }
+        return "-";
+    }
+
     private void SelectEnv(EnvType env)
     {
         SelectedEnv = env;
+        _ = FetchEnvData();
         StateHasChanged();
     }
 
@@ -475,6 +550,7 @@
         _timer?.Dispose();
         EpochTimer?.Dispose();
         EpochApiTimer?.Dispose();
+        StopEnvTimer();
     }
 
     private async void EnableDarkMode()
@@ -485,6 +561,7 @@
         {
             InvokeAsync(() => UpdateDateTime());
         }, null, 0, 1000);
+        StartEnvTimer();
         await JS.InvokeVoidAsync("eval", "document.body.style.overflow='hidden'");
         StateHasChanged();
     }
@@ -492,6 +569,7 @@
     {
         IsDarkMode = false;
         _timer?.Dispose();
+        StopEnvTimer();
         await JS.InvokeVoidAsync("eval", "document.body.style.overflow='auto'");
         StateHasChanged();
     }

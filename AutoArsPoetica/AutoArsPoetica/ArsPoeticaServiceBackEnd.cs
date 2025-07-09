@@ -1,3 +1,4 @@
+using AutoArsPoetica;
 using AutoArsPoetica.Services;
 using Microsoft.EntityFrameworkCore;
 using OpenAI.Chat;
@@ -58,5 +59,15 @@ internal class ArsPoeticaServiceBackEnd : IArsPoeticaService
             CreatedAt = p.CreatedAt,
             Epoch = p.Epoch
         }).ToList();
+    }
+
+    public async Task<WeatherDto> FetchWeatherAsync()
+    {
+        return await _dbContext.Weather.FirstOrDefaultAsync();
+    }
+
+    public async Task<CryptoDto> FetchCryptoAsync()
+    {
+        return await _dbContext.Crypto.FirstOrDefaultAsync();
     }
 }

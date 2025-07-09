@@ -1,3 +1,4 @@
+using AutoArsPoetica;
 using AutoArsPoetica.Components;
 using AutoArsPoetica.Services;
 using Microsoft.EntityFrameworkCore;
@@ -28,13 +29,16 @@ builder.Services.AddMudServices();
 builder.Services.AddScoped<IArsPoeticaService, ArsPoeticaServiceBackEnd>();
 
 // Add Weather services
-builder.Services.AddScoped<IWeatherService, WeatherService>();
-builder.Services.AddScoped<ICryptoService, CryptoService>();
+builder.Services.AddTransient<IWeatherService, WeatherService>();
+builder.Services.AddTransient<ICryptoService, CryptoService>();
 
 // Add services to the container.
 
 builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
+
+// Add background services
+builder.Services.AddHostedService<DataPullerBackgroundWorker>();
 
 var app = builder.Build();
 
@@ -98,6 +102,16 @@ app.MapGet("/api/crypto/generate", async (IArsPoeticaService arsPoeticaService, 
 app.MapGet("/api/poems", async (ArsPoeticaDbContext dbContext) =>
 {
     return await dbContext.Poems.OrderByDescending(p => p.Epoch).Take(23).ToListAsync();
+});
+
+app.MapGet("/api/weather", async (ArsPoeticaDbContext dbContext) =>
+{
+    return await dbContext.Weather.FirstOrDefaultAsync();
+});
+
+app.MapGet("/api/crypto", async (ArsPoeticaDbContext dbContext) =>
+{
+    return await dbContext.Crypto.FirstOrDefaultAsync();
 });
 
 app.Run();
