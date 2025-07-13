@@ -24,85 +24,93 @@ public class DataPullerBackgroundWorker : BackgroundService
         DateTime lastWeatherUpdate = DateTime.MinValue;
         while (!stoppingToken.IsCancellationRequested)
         {
-            _logger.LogInformation("DataPullerBackgroundWorker is running.");
-            // Pull weather data once per minute
-            if ((DateTime.UtcNow - lastWeatherUpdate).TotalSeconds >= 7200 || weatherDto == null)
+            try
             {
-                var weather = await _weatherService.GetWeatherDataAsync();
-                weatherDto = new WeatherDto
+                _logger.LogInformation("DataPullerBackgroundWorker is running.");
+                // Pull weather data once per minute
+                if ((DateTime.UtcNow - lastWeatherUpdate).TotalSeconds >= 7200 || weatherDto == null)
                 {
-                    Cloudiness = weather.Clouds.All,
-                    Temperature = weather.Main.Temperature - 273.15,
-                    Humidity = weather.Main.Humidity,
-                    WindSpeed = weather.Wind.Speed,
-                    PrecipitationType = weather.Weather[0].Description,
-                    UVIndex = GetUVIndexByTimeOfDay(),
-                    Visibility = weather.Visibility,
-                    Pressure = weather.Main.Pressure,
+                    var weather = await _weatherService.GetWeatherDataAsync();
+                    weatherDto = new WeatherDto
+                    {
+                        Cloudiness = weather.Clouds.All,
+                        Temperature = weather.Main.Temperature - 273.15,
+                        Humidity = weather.Main.Humidity,
+                        WindSpeed = weather.Wind.Speed,
+                        PrecipitationType = weather.Weather[0].Description,
+                        UVIndex = GetUVIndexByTimeOfDay(),
+                        Visibility = weather.Visibility,
+                        Pressure = weather.Main.Pressure,
+                    };
+                    lastWeatherUpdate = DateTime.UtcNow;
+                    _logger.LogInformation("Weather: {Weather}", weather);
+                }
+                var crypto = await _cryptoService.GetCryptoDataAsync("BTC-USD");
+                _logger.LogInformation("Crypto: {Crypto}", crypto);
+                var cryptoDto = new CryptoDto
+                {
+                    Price = crypto.Price,
+                    PriceChange24h = crypto.PricePercentageChange24h,
+                    Volume24h = crypto.Volume24h,
+                    Ask = crypto.Ask,
+                    Bid = crypto.Bid,
+                    Trading = crypto.TradingDisabled ? TradingStatus.Disabled : TradingStatus.Enabled,
+                    Status = crypto.Status,
+                    ProductId = crypto.ProductId
                 };
-                lastWeatherUpdate = DateTime.UtcNow;
-                _logger.LogInformation("Weather: {Weather}", weather);
-            }
-            var crypto = await _cryptoService.GetCryptoDataAsync("BTC-USD");
-            _logger.LogInformation("Crypto: {Crypto}", crypto);
-            var cryptoDto = new CryptoDto
-            {
-                Price = crypto.Price,
-                PriceChange24h = crypto.PricePercentageChange24h,
-                Volume24h = crypto.Volume24h,
-                Ask = crypto.Ask,
-                Bid = crypto.Bid,
-                Trading = crypto.TradingDisabled ? TradingStatus.Disabled : TradingStatus.Enabled,
-                Status = crypto.Status,
-                ProductId = crypto.ProductId
-            };
-            using (var scope = _serviceProvider.CreateScope())
-            {
-                var dbContext = scope.ServiceProvider.GetRequiredService<ArsPoeticaDbContext>();
-                if (weatherDto != null)
+                using (var scope = _serviceProvider.CreateScope())
                 {
-                    // Assuming WeatherDto has a primary key property called Id
-                    var existingWeather = dbContext.Weather.FirstOrDefault(w => w.Id == weatherDto.Id);
-                    if (existingWeather != null)
+                    var dbContext = scope.ServiceProvider.GetRequiredService<ArsPoeticaDbContext>();
+                    if (weatherDto != null)
                     {
-                        // Update properties
-                        existingWeather.Cloudiness = weatherDto.Cloudiness;
-                        existingWeather.Temperature = weatherDto.Temperature;
-                        existingWeather.Humidity = weatherDto.Humidity;
-                        existingWeather.WindSpeed = weatherDto.WindSpeed;
-                        existingWeather.PrecipitationType = weatherDto.PrecipitationType;
-                        existingWeather.UVIndex = weatherDto.UVIndex;
-                        existingWeather.Visibility = weatherDto.Visibility;
-                        existingWeather.Pressure = weatherDto.Pressure;
+                        // Assuming WeatherDto has a primary key property called Id
+                        var existingWeather = dbContext.Weather.FirstOrDefault(w => w.Id == weatherDto.Id);
+                        if (existingWeather != null)
+                        {
+                            // Update properties
+                            existingWeather.Cloudiness = weatherDto.Cloudiness;
+                            existingWeather.Temperature = weatherDto.Temperature;
+                            existingWeather.Humidity = weatherDto.Humidity;
+                            existingWeather.WindSpeed = weatherDto.WindSpeed;
+                            existingWeather.PrecipitationType = weatherDto.PrecipitationType;
+                            existingWeather.UVIndex = weatherDto.UVIndex;
+                            existingWeather.Visibility = weatherDto.Visibility;
+                            existingWeather.Pressure = weatherDto.Pressure;
+                        }
+                        else
+                        {
+                            dbContext.Weather.Add(weatherDto);
+                        }
                     }
-                    else
+                    if (cryptoDto != null)
                     {
-                        dbContext.Weather.Add(weatherDto);
+                        var existingCrypto = dbContext.Crypto.FirstOrDefault(c => c.Id == cryptoDto.Id);
+                        if (existingCrypto != null)
+                        {
+                            // Update properties
+                            existingCrypto.Price = cryptoDto.Price;
+                            existingCrypto.PriceChange24h = cryptoDto.PriceChange24h;
+                            existingCrypto.Volume24h = cryptoDto.Volume24h;
+                            existingCrypto.Ask = cryptoDto.Ask;
+                            existingCrypto.Bid = cryptoDto.Bid;
+                            existingCrypto.Trading = cryptoDto.Trading;
+                            existingCrypto.Status = cryptoDto.Status;
+                            existingCrypto.ProductId = cryptoDto.ProductId;
+                        }
+                        else
+                        {
+                            dbContext.Crypto.Add(cryptoDto);
+                        }
                     }
+                    await dbContext.SaveChangesAsync();
                 }
-                if (cryptoDto != null)
-                {
-                    var existingCrypto = dbContext.Crypto.FirstOrDefault(c => c.Id == cryptoDto.Id);
-                    if (existingCrypto != null)
-                    {
-                        // Update properties
-                        existingCrypto.Price = cryptoDto.Price;
-                        existingCrypto.PriceChange24h = cryptoDto.PriceChange24h;
-                        existingCrypto.Volume24h = cryptoDto.Volume24h;
-                        existingCrypto.Ask = cryptoDto.Ask;
-                        existingCrypto.Bid = cryptoDto.Bid;
-                        existingCrypto.Trading = cryptoDto.Trading;
-                        existingCrypto.Status = cryptoDto.Status;
-                        existingCrypto.ProductId = cryptoDto.ProductId;
-                    }
-                    else
-                    {
-                        dbContext.Crypto.Add(cryptoDto);
-                    }
-                }
-                await dbContext.SaveChangesAsync();
+                await Task.Delay(3000, stoppingToken);
             }
-            await Task.Delay(1000, stoppingToken);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception in DataPullerBackgroundWorker loop");
+                await Task.Delay(10000, stoppingToken); // Short wait before retrying
+            }
         }
     }
 

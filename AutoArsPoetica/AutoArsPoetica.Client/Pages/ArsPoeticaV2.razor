@@ -62,10 +62,12 @@
                     @((MarkupString)DisplayedPoem.Replace("\n", "<br />"))
                 </div>
             </div>
-            <div class="final-menu" style="left: 7rem; right: 12rem;">
-                <div style="cursor:pointer;" @onclick="ReturnToStart">About</div>
-                <div style="cursor:pointer;" @onclick="GeneratePoem">Generate</div>
-                <div style="cursor:pointer;" @onclick="EnableDarkMode">Dark Mode &lt;/&gt;</div>
+            <div class="final-bottom-bar">
+                <div class="final-bottom-menu">
+                    <div class="final-bottom-btn about-btn" @onclick="ReturnToStart">About</div>
+                    <div class="final-bottom-btn generate-btn" @onclick="GeneratePoem">Generate</div>
+                    <div class="final-bottom-btn dark-btn" @onclick="EnableDarkMode">Dark Mode &lt;/&gt;</div>
+                </div>
             </div>
         </div>
         @if (IsDarkMode)
@@ -93,10 +95,8 @@
                         }
                     </div>
                 </div>
-                <div class="darkmode-menu">
-                    <div style="opacity:0;" @onclick="ReturnToStart">About</div>
-                    <div style="opacity:0;" @onclick="GeneratePoem">Generate</div>
-                    <div style="cursor:pointer;" @onclick="DisableDarkMode">Bright Mode &lt;/&gt;</div>
+                <div class="darkmode-bottom-bar">
+                    <div class="bright-mode-btn" style="cursor:pointer;" @onclick="DisableDarkMode">Bright Mode &lt;/&gt;</div>
                 </div>
             </div>
         }
@@ -189,6 +189,7 @@
 
     .final-poem-box {
         padding: 1.5rem;
+        left: 6rem;
         font-size: 1rem;
         font-family: 'Inconsolata', monospace;
         min-width: 400px;
@@ -197,6 +198,7 @@
         background: transparent;
         text-align: left;
         margin-top: -2rem; /* Adjust this value as needed */
+        margin-left: 8rem;
     }
 
     .final-menu {
@@ -249,6 +251,10 @@
     }
 
     .darkmode-content {
+        position: absolute;
+        right: -6rem;
+        bottom: 16rem;
+        z-index: 101;
         padding: 1.5rem 1.5rem 1.5rem 1.5rem;
         font-size: 1rem;
         min-width: 400px;
@@ -380,6 +386,77 @@
         right: 0;
         z-index: 10;
     }
+
+    .final-bottom-bar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        padding-bottom: 2rem;
+        z-index: 20;
+        display: flex;
+        justify-content: center;
+        pointer-events: none;
+    }
+    .final-bottom-menu {
+        width: 100vw;
+        max-width: 100vw;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 7rem 0 7rem;
+        pointer-events: auto;
+    }
+    .final-bottom-btn {
+        font-size: 1rem;
+        color: #222;
+        font-family: 'Inconsolata', monospace;
+        cursor: pointer;
+        background: none;
+        border: none;
+        outline: none;
+        padding: 0.5rem 1.5rem;
+        transition: background 0.2s;
+        border-radius: 4px;
+    }
+    .final-bottom-btn:hover {
+        background: #e0d6c7;
+    }
+    .about-btn {
+        margin-right: auto;
+    }
+    .dark-btn {
+        margin-left: auto;
+    }
+    .darkmode-bottom-bar {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding-right: 7rem;
+        padding-bottom: 2rem;
+        z-index: 200;
+    }
+    .bright-mode-btn {
+        font-size: 1rem;
+        color: #f5ebdd;
+        font-family: 'Inconsolata', monospace;
+        cursor: pointer;
+        background: none;
+        border: none;
+        outline: none;
+        padding: 0.5rem 1.5rem;
+        transition: background 0.2s;
+        border-radius: 4px;
+    }
+    .bright-mode-btn:hover {
+        background: #222;
+    }
 </style>
 
 @code {
@@ -460,7 +537,22 @@
 
     private WeatherDto? CurrentWeather;
     private CryptoDto? CurrentCrypto;
+    private AviationDto? CurrentAviation;
+    private static readonly string[] AircraftTypes = { "Boeing 737", "Airbus A320", "Cessna 172", "Gulfstream G650", "Embraer E190" };
+    private static readonly string[] TimesOfDay = { "Morning", "Afternoon", "Evening", "Night" };
+    private static readonly string[] Directions = { "North", "South", "East", "West", "Northeast", "Northwest", "Southeast", "Southwest" };
+    private Random _random = new Random();
     private System.Threading.Timer? _envTimer;
+
+    // For static-like aviation values
+    private int _aviationAircrafts = 0;
+    private int _aviationTakeoffs = 0;
+    private int _aviationLandings = 0;
+    private bool _aviationInitialized = false;
+    private int _aviationTickCounter = 0;
+    private const int AviationUpdateInterval = 10; // seconds (was 5)
+    private const int AircraftsMin = 5;
+    private const int AircraftsMax = 20;
 
     private async void StartEnvTimer()
     {
@@ -482,9 +574,13 @@
     {
         try
         {
-            if (SelectedEnv == EnvType.Atmosphere || SelectedEnv == EnvType.Aviation)
+            if (SelectedEnv == EnvType.Atmosphere)
             {
                 CurrentWeather = await ArsPoeticaService.FetchWeatherAsync();
+            }
+            else if (SelectedEnv == EnvType.Aviation)
+            {
+                UpdateAviationStatics();
             }
             else if (SelectedEnv == EnvType.Cryptography)
             {
@@ -494,9 +590,83 @@
         catch { /* Optionally handle errors */ }
     }
 
+    private void UpdateAviationStatics()
+    {
+        if (!_aviationInitialized)
+            InitializeAviationStatics();
+
+        _aviationTickCounter++;
+        if (_aviationTickCounter >= AviationUpdateInterval)
+        {
+            _aviationTickCounter = 0;
+            // Randomly decide if a takeoff or landing occurs (low probability)
+            int eventRoll = _random.Next(0, 3); // 0: nothing, 1: takeoff, 2: landing
+            if (eventRoll == 1 && _aviationAircrafts > AircraftsMin)
+            {
+                // Takeoff: decrease aircrafts, increment takeoffs
+                _aviationAircrafts = Math.Max(_aviationAircrafts - 1, AircraftsMin);
+                _aviationTakeoffs = Math.Min(_aviationTakeoffs + 1, 10);
+            }
+            else if (eventRoll == 2 && _aviationAircrafts < AircraftsMax)
+            {
+                // Landing: increase aircrafts, increment landings
+                _aviationAircrafts = Math.Min(_aviationAircrafts + 1, AircraftsMax);
+                _aviationLandings = Math.Min(_aviationLandings + 1, 10);
+            }
+            // Update all aviation data at the slower interval
+            GenerateRandomAviationData();
+        }
+    }
+
+    private void InitializeAviationStatics()
+    {
+        if (!_aviationInitialized)
+        {
+            _aviationAircrafts = _random.Next(5, 15);
+            _aviationTakeoffs = _random.Next(1, 5);
+            _aviationLandings = _random.Next(1, 5);
+            _aviationInitialized = true;
+            GenerateRandomAviationData(); // Ensure immediate update on first load
+        }
+    }
+
+    private void ResetAviationStatics()
+    {
+        _aviationInitialized = false;
+        _aviationTickCounter = 0;
+    }
+
+    private string GetTimeOfDayFromCurrentTime()
+    {
+        var now = DateTime.Now;
+        int hour = now.Hour;
+        if (hour >= 5 && hour < 12)
+            return "Morning";
+        if (hour >= 12 && hour < 17)
+            return "Afternoon";
+        if (hour >= 17 && hour < 21)
+            return "Evening";
+        return "Night";
+    }
+
+    private void GenerateRandomAviationData()
+    {
+        CurrentAviation = new AviationDto
+        {
+            Aircrafts = _aviationAircrafts,
+            AverageSpeed = _random.Next(400, 950),
+            Landings = _aviationLandings,
+            Takeoffs = _aviationTakeoffs,
+            AircraftType = AircraftTypes[_random.Next(AircraftTypes.Length)],
+            FlightDuration = _random.Next(30, 720),
+            TimeOfDay = GetTimeOfDayFromCurrentTime(),
+            Direction = Directions[_random.Next(Directions.Length)]
+        };
+    }
+
     private string GetVariableValue(string variable)
     {
-        if (SelectedEnv == EnvType.Atmosphere || SelectedEnv == EnvType.Aviation)
+        if (SelectedEnv == EnvType.Atmosphere)
         {
             if (CurrentWeather == null) return "...";
             return variable switch
@@ -509,6 +679,22 @@
                 "UVIndex" => CurrentWeather.UVIndex,
                 "Visibility" => $"{CurrentWeather.Visibility} m",
                 "Pressure" => $"{CurrentWeather.Pressure} hPa",
+                _ => "-"
+            };
+        }
+        else if (SelectedEnv == EnvType.Aviation)
+        {
+            if (CurrentAviation == null) return "...";
+            return variable switch
+            {
+                "Aircrafts" => CurrentAviation.Aircrafts.ToString(),
+                "Average Speed" => $"{CurrentAviation.AverageSpeed} km/h",
+                "Landings" => CurrentAviation.Landings.ToString(),
+                "Takeoffs" => CurrentAviation.Takeoffs.ToString(),
+                "Aircraft Type" => CurrentAviation.AircraftType,
+                "Flight Duration" => $"{CurrentAviation.FlightDuration} min",
+                "Time Of Day" => CurrentAviation.TimeOfDay,
+                "Direction" => CurrentAviation.Direction,
                 _ => "-"
             };
         }
@@ -534,6 +720,10 @@
     private void SelectEnv(EnvType env)
     {
         SelectedEnv = env;
+        if (env == EnvType.Aviation)
+        {
+            InitializeAviationStatics();
+        }
         _ = FetchEnvData();
         StateHasChanged();
     }
@@ -592,6 +782,7 @@
             TypewriterTimer?.Dispose();
             IsGenerating = false;
         }
+        ResetAviationStatics();
     }
 
     private long CurrentEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds();

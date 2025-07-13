@@ -101,7 +101,7 @@ app.MapGet("/api/crypto/generate", async (IArsPoeticaService arsPoeticaService, 
 
 app.MapGet("/api/poems", async (ArsPoeticaDbContext dbContext) =>
 {
-    return await dbContext.Poems.OrderByDescending(p => p.Epoch).Take(23).ToListAsync();
+    return await dbContext.Poems.OrderByDescending(p => p.Epoch).Take(19).ToListAsync();
 });
 
 app.MapGet("/api/weather", async (ArsPoeticaDbContext dbContext) =>
