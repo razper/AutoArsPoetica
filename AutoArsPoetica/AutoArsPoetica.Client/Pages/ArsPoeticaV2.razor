@@ -252,11 +252,11 @@
 
     .darkmode-content {
         position: absolute;
-        right: -6rem;
-        bottom: 16rem;
+        right: -8rem;
+        bottom: 10rem;
         z-index: 101;
         padding: 1.5rem 1.5rem 1.5rem 1.5rem;
-        font-size: 1rem;
+        font-size: 0.9rem;
         min-width: 400px;
         min-height: 250px;
         color: #f5ebdd;
@@ -331,6 +331,7 @@
         align-items: flex-end;
         font-family: 'Inconsolata', monospace;
     }
+
     .epoch-current {
         font-size: 0.95rem;
         font-weight: 400;
@@ -342,9 +343,11 @@
         box-shadow: 0 1px 4px rgba(0,0,0,0.04);
         transition: background 0.2s;
     }
+
     .epoch-current:hover {
         background: #e0d6c7;
     }
+    
     .epoch-list-unboxed {
         position: fixed;
         top: unset;
@@ -371,6 +374,10 @@
         padding: 0.2rem 0.5rem;
         margin-bottom: 0.2rem;
         transition: background 0.2s;
+        cursor: pointer;
+    }
+    .epoch-list-item:hover {
+        cursor: pointer;
     }
 
     .top-bar {
@@ -422,7 +429,8 @@
         border-radius: 4px;
     }
     .final-bottom-btn:hover {
-        background: #e0d6c7;
+        background: none;
+        border-bottom: 2px solid #222;
     }
     .about-btn {
         margin-right: auto;
@@ -455,7 +463,8 @@
         border-radius: 4px;
     }
     .bright-mode-btn:hover {
-        background: #222;
+        background: none;
+        border-bottom: 2px solid #f5ebdd;
     }
 </style>
 
@@ -671,14 +680,14 @@
             if (CurrentWeather == null) return "...";
             return variable switch
             {
-                "Cloudiness" => $"{CurrentWeather.Cloudiness}%",
-                "Temperature" => $"{CurrentWeather.Temperature}°C",
-                "Humidity" => $"{CurrentWeather.Humidity}%",
-                "WindSpeed" => $"{CurrentWeather.WindSpeed} km/h",
+                "Cloudiness" => $"{CurrentWeather.Cloudiness:F2}%",
+                "Temperature" => $"{CurrentWeather.Temperature:F2}°C",
+                "Humidity" => $"{CurrentWeather.Humidity:F2}%",
+                "WindSpeed" => $"{CurrentWeather.WindSpeed:F2} km/h",
                 "Precipitation Type" => CurrentWeather.PrecipitationType,
-                "UVIndex" => CurrentWeather.UVIndex,
-                "Visibility" => $"{CurrentWeather.Visibility} m",
-                "Pressure" => $"{CurrentWeather.Pressure} hPa",
+                "UVIndex" => double.TryParse(CurrentWeather.UVIndex, out var uv) ? uv.ToString("F2") : CurrentWeather.UVIndex,
+                "Visibility" => $"{CurrentWeather.Visibility:F2} m",
+                "Pressure" => $"{CurrentWeather.Pressure:F2} hPa",
                 _ => "-"
             };
         }
@@ -688,11 +697,11 @@
             return variable switch
             {
                 "Aircrafts" => CurrentAviation.Aircrafts.ToString(),
-                "Average Speed" => $"{CurrentAviation.AverageSpeed} km/h",
+                "Average Speed" => $"{CurrentAviation.AverageSpeed:F2} km/h",
                 "Landings" => CurrentAviation.Landings.ToString(),
                 "Takeoffs" => CurrentAviation.Takeoffs.ToString(),
                 "Aircraft Type" => CurrentAviation.AircraftType,
-                "Flight Duration" => $"{CurrentAviation.FlightDuration} min",
+                "Flight Duration" => $"{CurrentAviation.FlightDuration:F2} min",
                 "Time Of Day" => CurrentAviation.TimeOfDay,
                 "Direction" => CurrentAviation.Direction,
                 _ => "-"
@@ -703,11 +712,11 @@
             if (CurrentCrypto == null) return "...";
             return variable switch
             {
-                "Price" => CurrentCrypto.Price,
-                "Price Change 24h" => CurrentCrypto.PriceChange24h,
-                "Volume" => CurrentCrypto.Volume24h,
-                "Ask" => CurrentCrypto.Ask.ToString(),
-                "Bid" => CurrentCrypto.Bid.ToString(),
+                "Price" => double.TryParse(CurrentCrypto.Price, out var price) ? price.ToString("F2") : CurrentCrypto.Price,
+                "Price Change 24h" => double.TryParse(CurrentCrypto.PriceChange24h, out var change) ? change.ToString("F2") : CurrentCrypto.PriceChange24h,
+                "Volume" => double.TryParse(CurrentCrypto.Volume24h, out var vol) ? vol.ToString("F2") : CurrentCrypto.Volume24h,
+                "Ask" => CurrentCrypto.Ask.ToString("F2"),
+                "Bid" => CurrentCrypto.Bid.ToString("F2"),
                 "Trading" => CurrentCrypto.Trading.ToString(),
                 "Status" => CurrentCrypto.Status,
                 "Product ID" => CurrentCrypto.ProductId,
